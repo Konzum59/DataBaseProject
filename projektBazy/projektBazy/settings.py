@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'corsheaders',
+    
     'shop.apps.ShopConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'drf_yasg',
+    'corsheaders',
 
 ]
 RREST_FRAMEWORK = {
@@ -98,15 +99,26 @@ WSGI_APPLICATION = 'projektBazy.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
+"""""
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': 'shopDB',  
-        'USER': '272561',  
-        'PASSWORD': 'osboxes.org',  #
-        'HOST': 'localhost',  
-        'PORT': '3306',  
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+"""""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',    # MySQL backend, works with MariaDB
+        'NAME': 'MariaDB_for_Django',                  # The database you created
+        'USER': 'MariaDB_user',                # Your MariaDB user
+        'PASSWORD': 'MariaDB_password',        # The user's password
+        'HOST': 'localhost',                     # 'localhost' unless using a remote DB
+        'PORT': '3306',                          # Default MariaDB/MySQL port
+        # Optional: Additional connection parameters
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 

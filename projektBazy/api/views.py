@@ -27,7 +27,9 @@ class ListingPagination(PageNumberPagination):
 class ListingsPagination(PageNumberPagination):
     page_size = 16  
     page_size_query_param = 'page_size'  
-    max_page_size = 100 
+    max_page_size = 100
+
+ 
 
 @api_view(['GET'])
 def getCategory(request):
@@ -191,6 +193,14 @@ class UserAddressesView(generics.ListAPIView):
             raise NotFound("User not found")
 
         return Address.objects.filter(resident=user)
+    
+@api_view(['GET'])
+def get_all_transactions(request):
+    transactions = Transaction.objects.all()
+    paginator = ListingPagination()
+    paginated_transactions = paginator.paginate_queryset(transactions, request)
+    serializer = TransactionSerializer(paginated_transactions, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
@@ -327,6 +337,14 @@ def add_chat_message(request, chat_id, listing_id):
             return Response(message_serializer.data, status=status.HTTP_201_CREATED)
     
     return Response(message_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_all_chats(request):
+    chats = Chat.objects.all()
+    paginator = ListingPagination()
+    paginated_chats = paginator.paginate_queryset(chats, request)
+    serializer = ChatSerializer(paginated_chats, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 @api_view(['GET'])
 def get_chats(request, listing_id):
