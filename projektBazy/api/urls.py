@@ -26,6 +26,7 @@ urlpatterns = [
     path('addmessage/<int:listing_id>', views.add_chat_message, name='add-chat-message'),
     path('chats/<int:listing_id>', views.get_chats, name='listing-chats'),
     path('chats/', views.get_all_chats, name='all-chats'),
+    path('chats/create/', views.create_chat, name='create-chat'),
     path('messages/<int:chat_id>', views.get_messages, name='chat-messages'),
     path('viewedmessage/<int:message_id>', views.set_message_viewed, name='message-viewed'),
     path('reviews/', ReviewViewSet.as_view({'get': 'list', 'post': 'create'}), name='review-list-create'),

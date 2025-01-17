@@ -58,8 +58,8 @@ class TransactionSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
-        fields = ['buyer', 'seller', 'listing']
-        read_only_fields = ['buyer', 'seller', 'listing']
+        fields = ['buyer', 'seller', 'listing', 'id']
+        read_only_fields = ['buyer', 'seller', 'listing', 'id']
     
     def create(self, validated_data):
         buyer = self.context['request'].user  
@@ -77,8 +77,8 @@ class ChatSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ['chat', 'sender', 'content', 'status', 'created_at', 'viewed_at']
-        read_only_fields = ['chat', 'sender', 'status', 'created_at', 'viewed_at']
+        fields = ['chat', 'sender', 'content', 'status', 'created_at', 'viewed_at', 'id']
+        read_only_fields = ['chat', 'sender', 'status', 'created_at', 'viewed_at', 'id']
     
     def create(self, validated_data):
         chat = validated_data['chat']

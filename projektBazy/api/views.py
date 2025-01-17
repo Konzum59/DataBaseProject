@@ -291,9 +291,9 @@ def cancel_listing(request, listing_id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
-def add_chat_message(request, chat_id, listing_id):
+def add_chat_message(request, listing_id, chat_id):
     if request.method == 'POST':
         try:
             listing = Listing.objects.get(id=listing_id)
@@ -310,24 +310,30 @@ def add_chat_message(request, chat_id, listing_id):
                         
         if chat is None:
             
-            if request.user.id == listing.seller.id:
+            if request.user_id == listing.seller.id:
                 return Response({'detail': 'Seller can not start the chat'}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
+                buyer = User.objects.get(id=request.user_id)
+            except User.DoesNotExist:
+                return Response({'detail': 'Author not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            
+            try:
                 newChat = {
-                    'buyer': request.user,
+                    'buyer': buyer,
                     'seller': listing.seller,
                     'listing': listing
                 }
                 chat_serializer = ChatSerializer(data=newChat, context={'request': request})
                 if chat_serializer.is_valid():
-                   chat = chat_serializer.save(seller=listing.seller, buyer=request.user, listing=listing)
+                   chat = chat_serializer.save(seller=listing.seller, buyer=buyer, listing=listing)
             
             except Exception as e:
                 return Response({'detail': 'Unable to create chat'}, status=status.HTTP_409_CONFLICT)
 
         new_message = {
-            'content' : request.data.get('message')
+            'content' : request.data.get('content')
         }
 
         message_serializer = MessageSerializer(data=new_message, context={'request': request})
@@ -337,6 +343,42 @@ def add_chat_message(request, chat_id, listing_id):
             return Response(message_serializer.data, status=status.HTTP_201_CREATED)
     
     return Response(message_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def create_chat(request):
+    """
+    Create a new chat between two users for a specific listing.
+    """
+    buyer_id = request.data.get('buyer_id')
+    listing_id = request.data.get('listing_id')
+
+    if not buyer_id or not listing_id:
+        return Response({'detail': 'Both buyer_id and listing_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        buyer = User.objects.get(id=buyer_id)
+        listing = Listing.objects.get(id=listing_id)
+    except User.DoesNotExist:
+        return Response({'detail': 'Buyer not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Listing.DoesNotExist:
+        return Response({'detail': 'Listing not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user == buyer:
+        return Response({'detail': 'You cannot start a chat with yourself as the buyer.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check if a chat already exists
+    existing_chat = Chat.objects.filter(participants=request.user).filter(participants=buyer).filter(listing=listing).first()
+    if existing_chat:
+        return Response({'detail': 'Chat already exists.', 'chat_id': existing_chat.id}, status=status.HTTP_200_OK)
+
+    # Create a new chat
+    chat = Chat.objects.create(buyer=request.user, seller=listing.seller, listing=listing)
+    #chat.participants.add(request.user, buyer)
+
+    serializer = ChatSerializer(chat)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
 def get_all_chats(request):
